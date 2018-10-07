@@ -1,0 +1,17 @@
+Turing Machine 1
+
+This machine prints out the binary number 001011011101111011111...
+
+m-config  symbol     operations               final m-config
+
+b                    Pe,R,Pe,R,P0,R,R,P0,L,L  o
+o         1          R,Px,L,L,L               o
+o         0                                   q
+q         Any (0/1)  R,R                      q
+q         None       P1,L                     p
+p         x          E,R                      q
+p         e          R                        f
+p         None       L,L                      p
+f         Any        R,R                      f
+f         None       P0,L,L                   o
+
