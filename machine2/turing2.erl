@@ -1,44 +1,8 @@
 -module(turing2).
 
--export([growing_ones/0]).
--export([ones/0]).
 -export([step/1]).
 
 -define(MAX_COUNT, 50).
-
-growing_ones() ->
-    step(fun growing_ones/2).
-
-growing_ones(none, _) ->
-    {["Pe","R","Pe","R","P0","R","R","P0","L","L"], o};
-growing_ones(o, "1") ->
-    {["R","Px","L","L","L"], o};
-growing_ones(o, "0") ->
-    {[], q};
-growing_ones(q, ZeroOrOne) when ZeroOrOne == "0"; ZeroOrOne == "1" ->
-    {["R","R"], q};
-growing_ones(q, "_") ->
-    {["P1","L"], p};
-growing_ones(p, "x") ->
-    {["E","R"], q};
-growing_ones(p, "e") ->
-    {["R"], f};
-growing_ones(p, "_") ->
-    {["L","L"], p};
-growing_ones(f, "_") ->
-    {["P0","L","L"], o};
-growing_ones(f, _) ->
-    {["R","R"], f}.
-
-ones() ->
-    step(fun ones/2).
-
-ones(none, _) ->
-    {[], ones};
-ones(ones, _) ->
-    {["P1", "R", "R"], ones}.
-
-
 
 step(Conf) ->
     step(none, "_", 1, "_", Conf, 0).
