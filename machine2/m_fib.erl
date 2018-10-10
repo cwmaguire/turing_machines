@@ -1,10 +1,14 @@
 -module(m_fib).
 -export([run/0]).
+-export([run/1]).
 
-% Calculate fibonacci numbers in binary
+% calculate fibonacci numbers in binary
 
 run() ->
-    turing2:step(fun fib/2).
+    run(100).
+
+run(Count) ->
+    turing2:step(fun fib/2, Count).
 
 % write out all the binary bits between x and y and between y and z
 % and then add those together and add them after z
@@ -19,18 +23,23 @@ run() ->
 % then I don't need to change it, just mark it as the last digit
 
 fib(none, _) ->
-    {["P@", "R", "Px", "R", "P0", "R", "Py", "R", "P1", "R", "Pz"],
-     reset_find_next_digit_of_1st_num};
+    {["P@", "R", "P0", "R", "Px", "R", "P0", "R", "Py", "R", "P1", "R", "Pz"],
+     reset_find_next_digit_of_2nd_num};
 
 fib(reset_find_next_digit_of_1st_num, "@") ->
     {[], find_next_digit_of_1st_num};
 fib(reset_find_next_digit_of_1st_num, _) ->
-    {[], reset_find_next_digit_of_1st_num};
+    {["L", "L"], reset_find_next_digit_of_1st_num};
 
 fib(find_next_digit_of_1st_num, "x") ->
     {["E", "R", "R"], move_x};
+% No more x, so no more digits of first number
+fib(find_next_digit_of_1st_num, "Y") ->
+    % We're done!
+    {[], reset_flip_y_to_x};
+    %{[], reset_find_next_digit_of_2nd_num};
 fib(find_next_digit_of_1st_num, _) ->
-    {[], find_next_digit_of_1st_num};
+    {["R", "R"], find_next_digit_of_1st_num};
 
 fib(move_x, "y") ->
     {["L"], write_next_digit_of_1st_num};
@@ -38,28 +47,143 @@ fib(move_x, "y") ->
 fib(move_x, "x") ->
     {["L"], 'FIGURE OUT 2ND DIGIT OF FIRST NUMBER'};
 
-fib(write_next_digit_of_1st_num, 0) ->
-    {["R", "R"], write_first_digit_0};
-fib(write_next_digit_of_1st_num, 1) ->
-    {["R", "R"], write_first_digit_1};
+fib(write_next_digit_of_1st_num, "0") ->
+    {["R"], write_first_digit_0};
+fib(write_next_digit_of_1st_num, "1") ->
+    {["R"], write_first_digit_1};
 
-fib(write_first_digit_0, "_") ->
-    {["P0", "R", "PC"], reset_find_next_digit_of_2nd_num};
-fib(write_first_digit_0, _) ->
+fib(write_1st_digit_0, "c") ->
+    {[], reset_find_next_digit_of_2nd_num};
+% Look for blank, C or c
+fib(write_1st_digit_0, _) ->
     {["R", "R"], write_first_digit_0};
 
 fib(write_first_digit_1, "_") ->
-    {["P1", "R", "PC"], reset_find_next_digit_of_2nd_num};
+    {["Pc", "L", "P1"], reset_find_next_digit_of_2nd_num};
+fib(write_first_digit_1, "c") ->
+    {["E", "R", "R", "Pc", "L"], maybe_carry};
 fib(write_first_digit_1, _) ->
     {["R", "R"], write_first_digit_1};
 
+fib(maybe_carry, "1") ->
+    {["E", "P0", "R", "R"], maybe_carry};
+fib(maybe_carry, _) ->
+    {["E", "P1"], reset_find_next_digit_of_2nd_num};
+
 fib(reset_find_next_digit_of_2nd_num, "@") ->
     {[], find_next_digit_of_2nd_num};
-fib(reset_find_next_digit_of_2nd_num, "_") ->
+fib(reset_find_next_digit_of_2nd_num, _) ->
     {["L", "L"], reset_find_next_digit_of_2nd_num};
 
+% TODO this is going to flip every 'y' to 'Y' so I'll have to come
+% back and erase all but the first and flip the first to an 'x' once
+% I've finished the addition
 fib(find_next_digit_of_2nd_num, "y") ->
     {["E", "PY", "R", "R"], move_y};
+fib(find_next_digit_of_2nd_num, "z") ->
+    {[], find_next_digit_of_1st_num}
+    %{[], reset_flip_y_to_x};
+fib(find_next_digit_of_2nd_num, _) ->
+    {["R", "R"], find_next_digit_of_2nd_num};
+
+fib(move_y, "z") ->
+    {["L"], write_next_digit_of_2nd_num};
+fib(move_y, "_") ->
+    {["Py", "L"], write_next_digit_of_2nd_num};
+
+fib(write_next_digit_of_2nd_num, "0") ->
+    {["R"], write_2nd_digit_0};
+fib(write_next_digit_of_2nd_num, "1") ->
+    {["R"], write_2nd_digit_1};
+
+% No c found, write one
+fib(write_2nd_digit_0, "_") ->
+    {["Pc", "L", "P0"], reset_find_next_digit_of_1st_num};
+fib(write_2nd_digit_0, "c") ->
+    {["E", "R", "R", "Pc", "L"], maybe_zero};
+fib(write_first_digit_0, _) ->
+    {["R", "R"], write_first_digit_0};
+
+fib(maybe_zero, "_") ->
+    {["P0"], reset_find_next_digit_of_2nd_num};
+fib(maybe_zero, _) ->
+    {[], reset_find_next_digit_of_2nd_num};
+
+% No c found, write one
+fib(write_2nd_digit_1, "_") ->
+    {["Pc", "L", "P1"], reset_find_next_digit_of_1st_num};
+fib(write_2nd_digit_1, "c") ->
+    {["E", "R", "R", "Pc", "L"], maybe_carry};
+fib(write_2nd_digit_1, _) ->
+    {["R", "R"], write_first_digit_1};
+
+fib(maybe_carry, "1") ->
+    {["E", "P0", "R", "R"], maybe_carry};
+fib(maybe_carry, _) ->
+    {["E", "P1"], reset_find_next_digit_of_1st_num};
+
+fib(add_digit_0_to_last, "c") ->
+    {["L"], add_digit_0};
+fib(add_digit_0_to_last, _) ->
+    {["R", "R"], add_digit_0};
+
+% C is for carry, add to left (we've already added space for the carried bit)
+fib(add_digit_1_to_last, "C") ->
+    {["E", "L"], add_digit_1};
+% c is for no-carry, add to right
+fib(add_digit_1_to_last, "c") ->
+    {["E", "R"], add_digit_1};
+fib(add_digit_1_to_last, _) ->
+    {["R", "R"], add_digit_1_to_last};
+
+% Unless we're filling in a place holder we don't need to do anything
+fib(add_digit_0, "_") ->
+    {["P0", "R", "Pc"], reset_find_next_digit_of_1st_num};
+fib(add_digit_0, _) ->
+    {[], reset_find_next_digit_of_1st_num};
+
+fib(add_digit_1, "_") ->
+    {["P1", "R", "E", "R", "R", "Pc"],
+     reset_find_next_digit_of_1st_num};
+fib(add_digit_1, "0") ->
+    {["E", "P1", "R", "E", "R", "R", "Pc"],
+     reset_find_next_digit_of_1st_num};
+fib(add_digit_1, "1") ->
+    % 1 + 1 = 10, which is 01 backwards, so erase the current 1,
+    % write 0, erase the "carry" flag, write a 1, re-write the carry
+    % flag after the new 1
+    {["E", "P0", "R", "E", "R", "P1", "R", "Pc"],
+     reset_find_next_digit_of_1st_num};
+
+fib(reset_flip_y_to_x, "@") ->
+    {[], flip_y_to_x};
+fib(reset_flip_y_to_x, _) ->
+    {["L"], reset_flip_y_to_x};
+
+fib(flip_y_to_x, "Y") ->
+    {["E", "Px"], clear_y};
+fib(flip_y_to_x, _) ->
+    {["R", "R"], flip_y_to_x};
+
+fib(clear_y, "Y") ->
+    {["E", "R", "R"], clear_y};
+fib(clear_y, "z") ->
+    {[], flip_z_to_y};
+fib(clear_y, _) ->
+    {["R", "R"], clear_y};
+
+fib(flip_z_to_y, "z") ->
+    {["E", "Py"], flip_c_to_z};
+% FIXME not sure if we can get here: are there
+% any spaces between the last Y and the z?
+fib(flip_z_to_y, _) ->
+    {["R", "R"], flip_z_to_y};
+
+fib(flip_c_to_z, "c") ->
+    % LOOP!
+    {["E", "Pz"], reset_find_next_digit_of_1st_num};
+fib(flip_c_to_z, _) ->
+    {["R", "R"], flip_c_to_z}.
 
 %% @0x0y1z - start
 %%       ^ -   flip to "reset to find next digit of first number"

@@ -1,16 +1,19 @@
 -module(turing2).
 
 -export([step/1]).
+-export([step/2]).
 
 -define(MAX_COUNT, 50).
 
 step(Conf) ->
-    step(none, "_", 1, "_", Conf, 0).
+    step(Conf, ?MAX_COUNT).
+step(Conf, MaxCount) ->
+    step(none, "_", 1, "_", Conf, 0, MaxCount).
 
-step(State, Symbol, Index, Tape, _, Count) when Count >= ?MAX_COUNT ->
-    io:format("Stopping: ~p, ~p, ~p,~n~p~n~p~n",
-              [State, Symbol, Index, Tape, Count]);
-step(State, Symbol0, Index0, Tape0, Conf, Count) ->
+step(State, Symbol, Index, Tape, _, Count, Max) when Count >= Max ->
+    io:format("Stopping at Max ~p: ~p, ~p, ~p,~n~p~n~p~n",
+              [Max, State, Symbol, Index, Tape, Count]);
+step(State, Symbol0, Index0, Tape0, Conf, Count, Max) ->
     %io:format("~p, ~p, ~p,~n~p,~n~p~n",
               %[State, Symbol0, Index0, Tape0, Count]),
     {Instructions, Next} = Conf(State, Symbol0),
@@ -18,7 +21,7 @@ step(State, Symbol0, Index0, Tape0, Conf, Count) ->
     Symbol = [lists:nth(Index, Tape)],
     io:format("~p, ~p, ~p, ~p, ~p~n",
               [State, Symbol, Index, Count, Tape]),
-    step(Next, Symbol, Index, Tape, Conf, Count + 1).
+    step(Next, Symbol, Index, Tape, Conf, Count + 1, Max).
 
 calc([], Tape, Index) ->
     {Tape, Index};
