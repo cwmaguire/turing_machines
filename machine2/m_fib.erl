@@ -1,6 +1,7 @@
 -module(m_fib).
 -export([run/0]).
 -export([run/1]).
+-export([fib/2]).
 
 % calculate fibonacci numbers in binary
 
@@ -32,43 +33,35 @@ fib(reset_find_next_digit_of_1st_num, _) ->
     {["L", "L"], reset_find_next_digit_of_1st_num};
 
 fib(find_next_digit_of_1st_num, "x") ->
-    {["E", "R", "R"], move_x};
+    {["E", "PX", "R", "R"], move_x};
 % No more x, so no more digits of first number
 fib(find_next_digit_of_1st_num, "Y") ->
-    % We're done!
-    {[], reset_flip_y_to_x};
+    {[], reset_find_next_digit_of_2nd_num};
     %{[], reset_find_next_digit_of_2nd_num};
 fib(find_next_digit_of_1st_num, _) ->
     {["R", "R"], find_next_digit_of_1st_num};
 
-fib(move_x, "y") ->
+fib(move_x, "Y") ->
     {["L"], write_next_digit_of_1st_num};
 % TODO figure this out
-fib(move_x, "x") ->
-    {["L"], 'FIGURE OUT 2ND DIGIT OF FIRST NUMBER'};
+fib(move_x, "_") ->
+    {["Px", "L"], write_next_digit_of_1st_num};
 
+%% Adding a zero does nothing
 fib(write_next_digit_of_1st_num, "0") ->
-    {["R"], write_first_digit_0};
+    {["R"], reset_find_next_digit_of_2nd_num};
 fib(write_next_digit_of_1st_num, "1") ->
-    {["R"], write_first_digit_1};
+    {["R"], add_digit_1_to_last};
 
-fib(write_1st_digit_0, "c") ->
-    {[], reset_find_next_digit_of_2nd_num};
-% Look for blank, C or c
-fib(write_1st_digit_0, _) ->
-    {["R", "R"], write_first_digit_0};
+fib(add_digit_1_to_last, "c") ->
+    {["L"], maybe_carry_1st};
+fib(add_digit_1_to_last, _) ->
+    {["R", "R"], add_digit_1_to_last};
 
-fib(write_first_digit_1, "_") ->
-    {["Pc", "L", "P1"], reset_find_next_digit_of_2nd_num};
-fib(write_first_digit_1, "c") ->
-    {["E", "R", "R", "Pc", "L"], maybe_carry};
-fib(write_first_digit_1, _) ->
-    {["R", "R"], write_first_digit_1};
-
-fib(maybe_carry, "1") ->
-    {["E", "P0", "R", "R"], maybe_carry};
-fib(maybe_carry, _) ->
-    {["E", "P1"], reset_find_next_digit_of_2nd_num};
+fib(maybe_carry_2nd, "1") ->
+    {["E", "P0", "R", "R"], maybe_carry_2nd};
+fib(maybe_carry_2nd, _) ->
+    {["E", "P1", "L"], reset_find_next_digit_of_1st_num};
 
 fib(reset_find_next_digit_of_2nd_num, "@") ->
     {[], find_next_digit_of_2nd_num};
@@ -81,60 +74,97 @@ fib(reset_find_next_digit_of_2nd_num, _) ->
 fib(find_next_digit_of_2nd_num, "y") ->
     {["E", "PY", "R", "R"], move_y};
 fib(find_next_digit_of_2nd_num, "z") ->
-    {[], find_next_digit_of_1st_num}
+    {[], reset_clear_xs};
+    %{[], reset_flip_y_to_x};
     %{[], reset_flip_y_to_x};
 fib(find_next_digit_of_2nd_num, _) ->
     {["R", "R"], find_next_digit_of_2nd_num};
 
-fib(move_y, "z") ->
-    {["L"], write_next_digit_of_2nd_num};
 fib(move_y, "_") ->
     {["Py", "L"], write_next_digit_of_2nd_num};
+fib(move_y, "z") ->
+    {["L"], write_next_digit_of_2nd_num};
+%fib(move_y, "_") ->
+    %{["Py", "L"], write_next_digit_of_2nd_num};
 
 fib(write_next_digit_of_2nd_num, "0") ->
-    {["R"], write_2nd_digit_0};
+    {["R"], find_z_to_write_0};
 fib(write_next_digit_of_2nd_num, "1") ->
-    {["R"], write_2nd_digit_1};
-
-% No c found, write one
-fib(write_2nd_digit_0, "_") ->
-    {["Pc", "L", "P0"], reset_find_next_digit_of_1st_num};
-fib(write_2nd_digit_0, "c") ->
-    {["E", "R", "R", "Pc", "L"], maybe_zero};
-fib(write_first_digit_0, _) ->
-    {["R", "R"], write_first_digit_0};
+    {["R"], find_z_to_write_1};
 
 fib(maybe_zero, "_") ->
-    {["P0"], reset_find_next_digit_of_2nd_num};
+    {["P0", "L"], reset_find_next_digit_of_1st_num};
 fib(maybe_zero, _) ->
-    {[], reset_find_next_digit_of_2nd_num};
+    {["L"], reset_find_next_digit_of_1st_num};
+
+fib(find_z_to_write_1, "z") ->
+    {["R"], check_blank_1};
+    %{["R"], write_2nd_digit_1};
+fib(find_z_to_write_1, _) ->
+    {["R", "R"], find_z_to_write_1};
+
+fib(find_z_to_write_0, "z") ->
+    {["R"], check_blank_0};
+    %{[], write_2nd_digit_0};
+fib(find_z_to_write_0, _) ->
+    {["R", "R"], find_z_to_write_0};
+
+fib(check_blank_0, "_") ->
+    {[], start_number_0};
+fib(check_blank_0, _) ->
+    {["R"], find_c_write_0};
+
+fib(check_blank_1, "_") ->
+    {[], start_number_1};
+fib(check_blank_1, _) ->
+    {["R"], find_c_write_1};
+
+fib(start_number_0, _) ->
+    {["P0", "R", "Pc"], reset_find_next_digit_of_1st_num};
+
+fib(start_number_1, _) ->
+    {["P1", "R", "Pc"], reset_find_next_digit_of_1st_num};
+
+fib(find_c_write_0, "c") ->
+    {["E", "R", "R", "Pc", "L"], maybe_zero};
+fib(find_c_write_0, _) ->
+    {["R", "R"], find_c_write_0};
+
+fib(find_c_write_1, "c") ->
+    {["E", "R", "R", "Pc", "L"], maybe_carry_2nd};
+fib(find_c_write_1, _) ->
+    {["R", "R"], find_c_write_1};
 
 % No c found, write one
-fib(write_2nd_digit_1, "_") ->
-    {["Pc", "L", "P1"], reset_find_next_digit_of_1st_num};
-fib(write_2nd_digit_1, "c") ->
-    {["E", "R", "R", "Pc", "L"], maybe_carry};
-fib(write_2nd_digit_1, _) ->
-    {["R", "R"], write_first_digit_1};
+%fib(write_2nd_digit_0, "_") ->
+    %{["Pc", "L", "P0", "L"], reset_find_next_digit_of_1st_num};
+%fib(write_2nd_digit_0, "c") ->
+    %{["E", "R", "R", "Pc", "L"], maybe_zero};
+%fib(write_2nd_digit_0, _) ->
+    %{["R", "R"], write_2nd_digit_0};
 
-fib(maybe_carry, "1") ->
-    {["E", "P0", "R", "R"], maybe_carry};
-fib(maybe_carry, _) ->
-    {["E", "P1"], reset_find_next_digit_of_1st_num};
+% No c found, write one
+%fib(write_2nd_digit_1, "_") ->
+    %{["Pc", "L", "P1", "L"], reset_find_next_digit_of_1st_num};
+%fib(write_2nd_digit_1, "c") ->
+    %{["E", "R", "R", "Pc", "L"], maybe_carry_2nd};
+%fib(write_2nd_digit_1, _) ->
+    %{["R", "R"], write_2nd_digit_1};
 
-fib(add_digit_0_to_last, "c") ->
-    {["L"], add_digit_0};
-fib(add_digit_0_to_last, _) ->
-    {["R", "R"], add_digit_0};
+fib(maybe_carry_1st, "1") ->
+    {["E", "P0", "R", "R"], maybe_carry_1st};
+fib(maybe_carry_1st, _) ->
+    {["E", "P1", "L"], reset_find_next_digit_of_2nd_num};
 
-% C is for carry, add to left (we've already added space for the carried bit)
-fib(add_digit_1_to_last, "C") ->
-    {["E", "L"], add_digit_1};
-% c is for no-carry, add to right
-fib(add_digit_1_to_last, "c") ->
-    {["E", "R"], add_digit_1};
-fib(add_digit_1_to_last, _) ->
-    {["R", "R"], add_digit_1_to_last};
+% fib(add_digit_0_to_last, "c") ->
+%     {["L"], add_digit_0};
+% fib(add_digit_0_to_last, _) ->
+%     {["R", "R"], add_digit_0};
+
+% fib(add_digit_1_to_last, "c") ->
+%     {["E", "R"], add_digit_1};
+% fib(add_digit_1_to_last, _) ->
+%     {["R", "R"], add_digit_1_to_last};
 
 % Unless we're filling in a place holder we don't need to do anything
 fib(add_digit_0, "_") ->
@@ -155,10 +185,25 @@ fib(add_digit_1, "1") ->
     {["E", "P0", "R", "E", "R", "P1", "R", "Pc"],
      reset_find_next_digit_of_1st_num};
 
-fib(reset_flip_y_to_x, "@") ->
+fib(reset_clear_xs, "@") ->
+    {[], clear_xs};
+fib(reset_clear_xs, _) ->
+    {["L"], reset_clear_xs};
+
+fib(clear_xs, "Y") ->
     {[], flip_y_to_x};
-fib(reset_flip_y_to_x, _) ->
-    {["L"], reset_flip_y_to_x};
+fib(clear_xs, "x") ->
+    {["E", "R", "R"], clear_xs};
+fib(clear_xs, "X") ->
+    {["E", "R", "R"], clear_xs};
+%% We shouldn't hit this
+fib(clear_xs, _) ->
+    {["R", "R"], clear_xs};
+
+%fib(reset_flip_y_to_x, "@") ->
+    %{[], flip_y_to_x};
+%fib(reset_flip_y_to_x, _) ->
+    %{["L"], reset_flip_y_to_x};
 
 fib(flip_y_to_x, "Y") ->
     {["E", "Px"], clear_y};
@@ -173,17 +218,27 @@ fib(clear_y, _) ->
     {["R", "R"], clear_y};
 
 fib(flip_z_to_y, "z") ->
-    {["E", "Py"], flip_c_to_z};
+    {["E", "Py", "R", "R"], find_c};
 % FIXME not sure if we can get here: are there
 % any spaces between the last Y and the z?
 fib(flip_z_to_y, _) ->
     {["R", "R"], flip_z_to_y};
+    %{["R", "R"], flip_z_to_y};
 
-fib(flip_c_to_z, "c") ->
-    % LOOP!
-    {["E", "Pz"], reset_find_next_digit_of_1st_num};
-fib(flip_c_to_z, _) ->
-    {["R", "R"], flip_c_to_z}.
+fib(find_c, "c") ->
+    {["E", "R"], write_z};
+fib(find_c, _) ->
+    {["R", "R"], find_c};
+
+fib(write_z, "_") ->
+    {["L", "Pz"], reset_find_next_digit_of_2nd_num};
+fib(write_z, _) ->
+    {["R", "R"], write_z}.
+
+%fib(flip_c_to_z, "_") ->
+    %{["L", "L", "L", "E", "R", "R", "Pz"], reset_find_next_digit_of_2nd_num};
+%fib(flip_c_to_z, _) ->
+    %{["R", "R"], flip_c_to_z}.
 
 %% @0x0y1z - start
 %%       ^ -   flip to "reset to find next digit of first number"
