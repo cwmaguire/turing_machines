@@ -25,7 +25,13 @@ run(Count) ->
 
 % Kick everything off with 2 numbers
 fib(none, _) ->
-    {["P@", "R", "P-", "R", "Px", "R", "P0", "R", "Py", "R", "P1", "R", "Pz"],
+    {["P@", "R",
+      "P-", "R", % spacer for digit
+      "Px", "R", % mark start of 1st #
+      "P0", "R", % 1st #
+      "Py", "R", % mark end of 1st/start of 2nd #
+      "P1", "R", % 2nd #
+      "Pz"],     % mark end of 2nd #
      reset_find_next_digit_of_2nd_num};
 
 % Back to the start to start looking for the next digit
@@ -173,9 +179,16 @@ fib(add_digit_0, _) ->
 
 % Back to @ to start resetting markers
 fib(reset_clear_xs, "@") ->
-    {[], clear_xs};
+    {[], flip_x};
 fib(reset_clear_xs, _) ->
     {["L"], reset_clear_xs};
+
+% Add a | separator between numbers that are
+% no longer needed
+fib(flip_x, "X") ->
+    {["E", "P|"], clear_xs};
+fib(flip_x, _) ->
+    {["R", "R"], flip_x};
 
 % Clear out x's until we hit a Y.
 % We don't need the 1st number anymore since
